@@ -13,8 +13,9 @@ const CONFIG = {
     { name: "What Do You Mean?", url: "Music/What Do You Mean.mp3" },
     { name: "April Encounter", url: "Music/AprilEncounter.mp3" },
     { name: "Landslide", url: "Music/Landslide.mp3" },
+    { name: "her", url: "Music/JVKE - her.mp3" },
+    { name: "Ocean eyes", url: "Music/Ocean eyes.mp3" },
     { name: "前前前世", url: "Music/前前前世.mp3" },
-    { name: "零距离的思念", url: "Music/零距离的思念.mp3" },
   ],
 };
 
@@ -33,7 +34,7 @@ function showToast(message) {
 const audio = document.getElementById("player-audio") || (() => {
   const a = document.createElement("audio");
   a.id = "player-audio";
-  a.preload = "metadata";
+  a.preload = "auto";
   document.body.appendChild(a);
   return a;
 })();
@@ -105,8 +106,75 @@ function selectTrack(index) {
   titleEl.textContent = song.name;
   subEl.textContent = "Playing…";
   applyBackground(song);
+  loadCover(song.url);
   tryPlay();
   updateActiveTrack();
+}
+
+function syncsafe(n) {
+  return ((n & 0x7f000000) >> 3) | ((n & 0x7f0000) >> 2) | ((n & 0x7f00) >> 1) | (n & 0x7f);
+}
+
+async function extractCover(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const dv = new DataView(buf);
+    if (dv.getUint8(0) !== 0x49 || dv.getUint8(1) !== 0x44 || dv.getUint8(2) !== 0x33) return null;
+    const ver = dv.getUint8(3);
+    const tagSize = syncsafe(dv.getUint32(7));
+    let offset = 10;
+    if (dv.getUint8(5) & 0x40) {
+      offset += ver === 3 ? dv.getUint32(10) : syncsafe(dv.getUint32(10));
+    }
+    const end = Math.min(10 + tagSize, buf.byteLength);
+    while (offset + 10 <= end) {
+      const frameId = String.fromCharCode(dv.getUint8(offset), dv.getUint8(offset + 1), dv.getUint8(offset + 2), dv.getUint8(offset + 3));
+      const frameSize = ver === 3 ? dv.getUint32(offset + 4) : syncsafe(dv.getUint32(offset + 4));
+      if (frameSize <= 0) break;
+      if (frameId === "APIC") {
+        const data = new Uint8Array(buf, offset + 10, Math.min(frameSize, buf.byteLength - offset - 10));
+        const enc = data[0];
+        let pos = 1;
+        let mime = "";
+        while (pos < data.length && data[pos] !== 0) {
+          mime += String.fromCharCode(data[pos]);
+          pos++;
+        }
+        pos++;
+        pos++;
+        if (enc === 1 || enc === 2) {
+          while (pos + 1 < data.length && !(data[pos] === 0 && data[pos + 1] === 0)) pos += 2;
+          pos += 2;
+        } else {
+          while (pos < data.length && data[pos] !== 0) pos++;
+          pos++;
+        }
+        if (pos >= data.length) return null;
+        const imgData = data.slice(pos);
+        const blob = new Blob([imgData], { type: mime || "image/jpeg" });
+        return URL.createObjectURL(blob);
+      }
+      offset += 10 + frameSize;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadCover(url) {
+  const coverUrl = await extractCover(url);
+  if (coverUrl) {
+    disc.style.backgroundImage = `url("${coverUrl}")`;
+    disc.style.backgroundSize = "cover";
+    disc.style.backgroundPosition = "center";
+    disc.textContent = "";
+  } else {
+    disc.style.backgroundImage = "";
+    disc.textContent = "♪";
+  }
 }
 
 function applyBackground(song) {
@@ -257,6 +325,14 @@ barRange.addEventListener("change", () => {
 
 renderTracklist();
 
+if (CONFIG.songs.length > 0) {
+  currentTrack = 0;
+  audio.src = CONFIG.songs[0].url;
+  titleEl.textContent = CONFIG.songs[0].name;
+  updateActiveTrack();
+  loadCover(CONFIG.songs[0].url);
+}
+
 
 const overlay = document.getElementById("entry-overlay");
 const entryMessage = document.getElementById("entry-message");
@@ -264,9 +340,11 @@ entryMessage.textContent = CONFIG.message;
 
 function enterPage() {
   overlay.classList.add("hide");
-  if (CONFIG.songs.length > 0 && currentTrack === -1) {
+  if (CONFIG.songs.length === 0) return;
+  if (currentTrack === -1) {
     selectTrack(0);
   } else if (CONFIG.songs.length > 0 && audio.paused) {
+    subEl.textContent = "Playing…";
     tryPlay();
   }
 }
