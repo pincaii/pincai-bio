@@ -492,7 +492,7 @@ body {
   filter: brightness(1.18);
 }
 
-.dc-add svg {
+.dc-add-chev {
   display: block;
   width: 20px;
   height: 20px;
@@ -500,7 +500,15 @@ body {
   transition: transform 0.2s ease;
 }
 
-.dc-add:hover svg {
+.dc-add-logo {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: #5865f2;
+}
+
+.dc-add:hover .dc-add-chev {
   transform: translateX(4px);
 }
 

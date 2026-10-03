@@ -686,3 +686,59 @@ setInterval(() => {
   document.title = (PAGE_TITLE + PAGE_TITLE).slice(titlePos, titlePos + PAGE_TITLE.length);
   titlePos = (titlePos + 1) % PAGE_TITLE.length;
 }, 500);
+
+
+/* ---------- Visitors ---------- */
+const VISIT_API = "https://abacus.jasoncameron.dev";
+const VISIT_NAMESPACE = "pincaii-bio";
+const VISIT_KEY = "visits";
+const VISIT_SEEN = "pincai-bio:counted";
+const VISIT_CACHE = "pincai-bio:last-count";
+
+const visitsEl = document.getElementById("site-visits");
+
+function readStore(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStore(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+function showVisits(value) {
+  if (visitsEl && Number.isFinite(value)) visitsEl.textContent = value.toLocaleString("en-US");
+}
+
+async function readVisits(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data.value === "number" ? data.value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function initVisits() {
+  const cached = Number(readStore(VISIT_CACHE));
+  if (cached > 0) showVisits(cached);
+
+  const counted = readStore(VISIT_SEEN) === "1";
+  let value = counted ? await readVisits(`${VISIT_API}/get/${VISIT_NAMESPACE}/${VISIT_KEY}`) : null;
+  if (value === null) value = await readVisits(`${VISIT_API}/hit/${VISIT_NAMESPACE}/${VISIT_KEY}`);
+
+  if (value !== null) {
+    showVisits(value);
+    writeStore(VISIT_CACHE, String(value));
+    writeStore(VISIT_SEEN, "1");
+  }
+}
+
+initVisits();
