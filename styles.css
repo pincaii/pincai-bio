@@ -430,7 +430,17 @@ body {
 .dc-activity {
   font-size: 13px;
   color: #000;
+  text-align: center;
+  line-height: 1.45;
   word-break: break-all;
+}
+
+.dc-activity .dc-line {
+  display: block;
+}
+
+.dc-activity .dc-verb {
+  white-space: nowrap;
 }
 
 .dc-activity-row {
@@ -438,11 +448,7 @@ body {
   align-items: center;
   gap: 6px;
   justify-content: center;
-  margin-top: 3px;
-}
-
-.dc-activity-row.has-icon {
-  justify-content: flex-start;
+  margin-top: 12px;
 }
 
 .dc-activity-icon {

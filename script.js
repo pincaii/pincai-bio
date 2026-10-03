@@ -562,12 +562,19 @@ function renderDiscord(data) {
   const custom = customStatus(data.activities);
   if (act) {
     dcDivider.style.display = "";
-    dcActivity.textContent = `${activityVerb(act.type)} ${act.name}`;
+    dcActivity.replaceChildren();
+    const actVerb = document.createElement("span");
+    actVerb.className = "dc-line dc-verb";
+    actVerb.textContent = activityVerb(act.type);
+    const actName = document.createElement("span");
+    actName.className = "dc-line dc-act-name";
+    actName.textContent = act.name || "Activity";
+    dcActivity.append(actVerb, actName);
     showActivityIcon(activityIconUrl(act));
     renderDcActivity(act);
   } else if (custom) {
     dcDivider.style.display = "none";
-    dcActivity.textContent = "";
+    dcActivity.replaceChildren();
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
     if (custom.emojiId) {
@@ -591,7 +598,11 @@ function renderDiscord(data) {
     dcAppIcon.style.display = "none";
   } else {
     dcDivider.style.display = "none";
-    dcActivity.textContent = data.discord_status === "offline" ? "Offline" : "Currently doing nothing";
+    dcActivity.replaceChildren();
+    const idleLine = document.createElement("span");
+    idleLine.className = "dc-line";
+    idleLine.textContent = data.discord_status === "offline" ? "Offline" : "Currently doing nothing";
+    dcActivity.appendChild(idleLine);
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
     dcDetail.hidden = true;
@@ -691,9 +702,9 @@ setInterval(() => {
 /* ---------- Visitors ---------- */
 const VISIT_API = "https://abacus.jasoncameron.dev";
 const VISIT_NAMESPACE = "pincaii-bio";
-const VISIT_KEY = "visits";
+const VISIT_KEY = "count";
 const VISIT_SEEN = "pincai-bio:counted";
-const VISIT_CACHE = "pincai-bio:last-count";
+const VISIT_FALLBACK = 520;
 
 const visitsEl = document.getElementById("site-visits");
 
@@ -727,17 +738,15 @@ async function readVisits(url) {
 }
 
 async function initVisits() {
-  const cached = Number(readStore(VISIT_CACHE));
-  if (cached > 0) showVisits(cached);
-
   const counted = readStore(VISIT_SEEN) === "1";
   let value = counted ? await readVisits(`${VISIT_API}/get/${VISIT_NAMESPACE}/${VISIT_KEY}`) : null;
   if (value === null) value = await readVisits(`${VISIT_API}/hit/${VISIT_NAMESPACE}/${VISIT_KEY}`);
 
   if (value !== null) {
     showVisits(value);
-    writeStore(VISIT_CACHE, String(value));
     writeStore(VISIT_SEEN, "1");
+  } else {
+    showVisits(VISIT_FALLBACK);
   }
 }
 
