@@ -445,6 +445,10 @@ body {
   justify-content: flex-start;
 }
 
+.discord-card.has-activity .dc-activity-row {
+  margin-top: 20px;
+}
+
 .dc-activity-icon {
   display: none;
   width: 20px;
@@ -535,6 +539,10 @@ body {
   align-items: center;
   gap: 12px;
   text-align: left;
+}
+
+.dc-detail[hidden] {
+  display: none;
 }
 
 .dc-app-icon {

@@ -372,6 +372,7 @@ const dcActivity = document.getElementById("dc-activity");
 const dcActivityRow = document.getElementById("dc-activity-row");
 const dcActivityIcon = document.getElementById("dc-activity-icon");
 const dcAdd = document.getElementById("dc-add");
+const dcCard = document.getElementById("discord-card");
 const dcDivider = document.getElementById("dc-divider");
 const dcDetail = document.getElementById("dc-detail");
 const dcAppIcon = document.getElementById("dc-app-icon");
@@ -562,11 +563,13 @@ function renderDiscord(data) {
   const custom = customStatus(data.activities);
   if (act) {
     dcDivider.style.display = "";
+    dcCard.classList.add("has-activity");
     dcActivity.textContent = activityVerb(act.type);
     showActivityIcon(activityIconUrl(act));
     renderDcActivity(act);
   } else if (custom) {
     dcDivider.style.display = "none";
+    dcCard.classList.remove("has-activity");
     dcActivity.textContent = "";
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
@@ -591,6 +594,7 @@ function renderDiscord(data) {
     dcAppIcon.style.display = "none";
   } else {
     dcDivider.style.display = "none";
+    dcCard.classList.remove("has-activity");
     dcActivity.textContent = data.discord_status === "offline" ? "Offline" : "Currently doing nothing";
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
@@ -609,6 +613,7 @@ function renderDiscordOffline() {
   dcActivityIcon.removeAttribute("src");
   dcActivityRow.classList.remove("has-icon");
   dcDivider.style.display = "none";
+  dcCard.classList.remove("has-activity");
   dcDetail.hidden = true;
   dcActivityStart = null;
   dcAppIcon.removeAttribute("src");
