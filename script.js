@@ -562,19 +562,12 @@ function renderDiscord(data) {
   const custom = customStatus(data.activities);
   if (act) {
     dcDivider.style.display = "";
-    dcActivity.replaceChildren();
-    const actVerb = document.createElement("span");
-    actVerb.className = "dc-line dc-verb";
-    actVerb.textContent = activityVerb(act.type);
-    const actName = document.createElement("span");
-    actName.className = "dc-line dc-act-name";
-    actName.textContent = act.name || "Activity";
-    dcActivity.append(actVerb, actName);
+    dcActivity.textContent = activityVerb(act.type);
     showActivityIcon(activityIconUrl(act));
     renderDcActivity(act);
   } else if (custom) {
     dcDivider.style.display = "none";
-    dcActivity.replaceChildren();
+    dcActivity.textContent = "";
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
     if (custom.emojiId) {
@@ -598,11 +591,7 @@ function renderDiscord(data) {
     dcAppIcon.style.display = "none";
   } else {
     dcDivider.style.display = "none";
-    dcActivity.replaceChildren();
-    const idleLine = document.createElement("span");
-    idleLine.className = "dc-line";
-    idleLine.textContent = data.discord_status === "offline" ? "Offline" : "Currently doing nothing";
-    dcActivity.appendChild(idleLine);
+    dcActivity.textContent = data.discord_status === "offline" ? "Offline" : "Currently doing nothing";
     dcActivityIcon.removeAttribute("src");
     dcActivityRow.classList.remove("has-icon");
     dcDetail.hidden = true;

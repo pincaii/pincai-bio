@@ -428,19 +428,9 @@ body {
 }
 
 .dc-activity {
-  font-size: 13px;
+  font-size: 12px;
   color: #000;
-  text-align: center;
-  line-height: 1.45;
   word-break: break-all;
-}
-
-.dc-activity .dc-line {
-  display: block;
-}
-
-.dc-activity .dc-verb {
-  white-space: nowrap;
 }
 
 .dc-activity-row {
@@ -448,7 +438,11 @@ body {
   align-items: center;
   gap: 6px;
   justify-content: center;
-  margin-top: 12px;
+  margin-top: 3px;
+}
+
+.dc-activity-row.has-icon {
+  justify-content: flex-start;
 }
 
 .dc-activity-icon {
@@ -516,6 +510,18 @@ body {
 
 .dc-add:hover .dc-add-chev {
   transform: translateX(4px);
+}
+
+@media (max-width: 560px) {
+  .dc-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dc-add {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 .dc-divider {
