@@ -609,7 +609,7 @@ function renderDiscordOffline() {
   setDcStatus("offline");
   dcAvatar.src = "https://cdn.discordapp.com/embed/avatars/0.png";
   dcName.textContent = "Discord";
-  dcActivity.textContent = "Not connected to Lanyard · join the server to show status";
+  dcActivity.textContent = "Connected Failed";
   dcActivityIcon.removeAttribute("src");
   dcActivityRow.classList.remove("has-icon");
   dcDivider.style.display = "none";
@@ -699,8 +699,13 @@ const VISIT_NAMESPACE = "pincaii-bio";
 const VISIT_KEY = "count";
 const VISIT_SEEN = "pincai-bio:counted";
 const VISIT_FALLBACK = 520;
+const BUSUANZI_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
+const BUSUANZI_PING = "https://busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback";
+const BUSUANZI_PING_MS = 2500;
+const BUSUANZI_WAIT_MS = 3000;
 
 const visitsEl = document.getElementById("site-visits");
+const busuanziEl = document.getElementById("busuanzi_value_site_uv");
 
 function readStore(key) {
   try {
@@ -720,6 +725,56 @@ function showVisits(value) {
   if (visitsEl && Number.isFinite(value)) visitsEl.textContent = value.toLocaleString("en-US");
 }
 
+function loadBusuanzi() {
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = BUSUANZI_SRC;
+  document.head.appendChild(script);
+}
+
+function readBusuanzi() {
+  if (!busuanziEl) return null;
+  const digits = String(busuanziEl.textContent).replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  const value = Number(digits);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function waitForBusuanzi(timeoutMs) {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeoutMs;
+    (function check() {
+      const value = readBusuanzi();
+      if (value !== null) return resolve(value);
+      if (Date.now() >= deadline) return resolve(null);
+      setTimeout(check, 200);
+    })();
+  });
+}
+
+function busuanziAlive(timeoutMs) {
+  return new Promise((resolve) => {
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = setTimeout(() => {
+      if (controller) controller.abort();
+      resolve(false);
+    }, timeoutMs);
+    fetch(BUSUANZI_PING, {
+      mode: "no-cors",
+      cache: "no-store",
+      signal: controller ? controller.signal : undefined
+    })
+      .then(() => {
+        clearTimeout(timer);
+        resolve(true);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(false);
+      });
+  });
+}
+
 async function readVisits(url) {
   try {
     const res = await fetch(url, { cache: "no-store" });
@@ -732,6 +787,15 @@ async function readVisits(url) {
 }
 
 async function initVisits() {
+  if (await busuanziAlive(BUSUANZI_PING_MS)) {
+    loadBusuanzi();
+    const busuanzi = await waitForBusuanzi(BUSUANZI_WAIT_MS);
+    if (busuanzi !== null) {
+      showVisits(busuanzi);
+      return;
+    }
+  }
+
   const counted = readStore(VISIT_SEEN) === "1";
   let value = counted ? await readVisits(`${VISIT_API}/get/${VISIT_NAMESPACE}/${VISIT_KEY}`) : null;
   if (value === null) value = await readVisits(`${VISIT_API}/hit/${VISIT_NAMESPACE}/${VISIT_KEY}`);

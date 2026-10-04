@@ -155,6 +155,10 @@ body {
   color: #000;
 }
 
+.visit-probe {
+  display: none;
+}
+
 
 .pfp-wrap {
   position: relative;
