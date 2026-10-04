@@ -609,7 +609,7 @@ function renderDiscordOffline() {
   setDcStatus("offline");
   dcAvatar.src = "https://cdn.discordapp.com/embed/avatars/0.png";
   dcName.textContent = "Discord";
-  dcActivity.textContent = "Connected Failed";
+  dcActivity.textContent = "Connection Failed";
   dcActivityIcon.removeAttribute("src");
   dcActivityRow.classList.remove("has-icon");
   dcDivider.style.display = "none";
@@ -698,13 +698,13 @@ const VISIT_API = "https://abacus.jasoncameron.dev";
 const VISIT_NAMESPACE = "pincaii-bio";
 const VISIT_KEY = "count";
 const VISIT_SEEN = "pincai-bio:counted";
-const VISIT_FALLBACK = 520;
 const BUSUANZI_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
 const BUSUANZI_PING = "https://busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback";
-const BUSUANZI_PING_MS = 2500;
+const BUSUANZI_PING_MS = 1500;
 const BUSUANZI_WAIT_MS = 3000;
 
 const visitsEl = document.getElementById("site-visits");
+const visitsBadge = document.getElementById("views-badge");
 const busuanziEl = document.getElementById("busuanzi_value_site_uv");
 
 function readStore(key) {
@@ -722,7 +722,9 @@ function writeStore(key, value) {
 }
 
 function showVisits(value) {
-  if (visitsEl && Number.isFinite(value)) visitsEl.textContent = value.toLocaleString("en-US");
+  if (!visitsEl || !Number.isFinite(value)) return;
+  visitsEl.textContent = value.toLocaleString("en-US");
+  if (visitsBadge) visitsBadge.hidden = false;
 }
 
 function loadBusuanzi() {
@@ -803,8 +805,6 @@ async function initVisits() {
   if (value !== null) {
     showVisits(value);
     writeStore(VISIT_SEEN, "1");
-  } else {
-    showVisits(VISIT_FALLBACK);
   }
 }
 

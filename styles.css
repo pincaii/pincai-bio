@@ -155,6 +155,10 @@ body {
   color: #000;
 }
 
+.views-badge[hidden] {
+  display: none;
+}
+
 .visit-probe {
   display: none;
 }
